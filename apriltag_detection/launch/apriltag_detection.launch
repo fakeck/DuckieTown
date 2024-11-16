@@ -1,0 +1,6 @@
+<launch>
+    <arg name="map_yaml_path" default="/code/catkin_ws/src/user_code/project/map/map.yaml" />
+    <node name="apriltag_detection_node" pkg="apriltag_detection" type="apriltag_detection_node" output="screen">
+        <param name="map_yaml_path" value="$(arg map_yaml_path)" />
+    </node>
+</launch>
