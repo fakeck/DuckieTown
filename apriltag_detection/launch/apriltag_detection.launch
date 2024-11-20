@@ -2,7 +2,7 @@
     <arg name="map_yaml_path" default="/code/catkin_ws/src/user_code/project/map/map.yaml" />
     <!-- TODO: replace with your robot's intrinsic file -->
     <arg name="camera_intrinsics_yaml_path" default="/data/config/calibrations/camera_intrinsic/ivy.yaml" />
-    <arg name="tag_size" default="0.062" /> <!-- 62mm -->
+    <arg name="tag_size" default="0.12" /> <!-- 62mm -->
 
 
     <node name="apriltag_detection_node" pkg="apriltag_detection" type="apriltag_detection_node.py" output="screen">

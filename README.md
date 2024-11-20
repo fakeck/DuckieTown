@@ -10,7 +10,7 @@ To update the latest repo:
 In container:  
 `$ cd /code/catkin_ws`    
 `$ source devel/setup.bash`  
-`$ cakin build`  
+`$ catkin build`  
 `$ cd src/user_code/project`  
 `$ pip install -r pip_requirements.txt`  
 In `project_bringup.sh` , change `robot_name="ivy"` to your robot's name.  

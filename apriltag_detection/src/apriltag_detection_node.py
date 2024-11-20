@@ -38,13 +38,13 @@ class AprilTagDetectionNode:
             raise ValueError("/robot_name is not set, run project_bringup.sh first.")
         rospy.loginfo("Robot name: %s", self.robot_name)
 
-        # keep everything in meter [m], tag size in lab: 62mm
+        # keep everything in meter [m]
         self.tag_size = rospy.get_param("~tag_size")
         if self.tag_size is None:
             raise ValueError("~tag_size is not set")
         self.tag_size = float(self.tag_size)
 
-        self.map = self._read_map()
+        self.map, self.tags = self._read_map() # np.ndarray and dict{tag_id, [coord_x, coord_y]}
         self.intrinsic_dict = self._read_intrinsic()
         self.camera_matrix = self.intrinsic_dict['camera_matrix']
         self.distortion_coefficients = self.intrinsic_dict['distortion_coefficients']
@@ -74,7 +74,9 @@ class AprilTagDetectionNode:
         
         with open(yaml_path, "r") as file:
             data = yaml.load(file, Loader=yaml.FullLoader)
-            return np.array(data["map"])
+            map = np.array(data["map"])
+            tags = data["tags"]
+        return map, tags
 
     def _read_intrinsic(self) -> dict:
         yaml_path = rospy.get_param("~camera_intrinsics_yaml_path")
@@ -160,8 +162,7 @@ class AprilTagDetectionNode:
             tag_msg.tag_pose.pose.orientation.z = quat['z']
             tag_msg.tag_pose.pose.orientation.w = quat['w']
 
-            # TODO: Placeholder for grid coordinates (you can update this with actual grid coordinates logic)
-            tag_msg.grid_coords = [0, 0]
+            tag_msg.grid_coords = self.tags[closest_tag.tag_id]
             self.tag_pub.publish(tag_msg)
 
             # Overlay the detected tag on the image

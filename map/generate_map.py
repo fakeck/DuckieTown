@@ -16,12 +16,18 @@ map_array = [[0, 0, 0, 1, 1, 1],
              [0, 0, 0, 0, 0, 0]
             ]
 
-grid_coords_tag_id = [
-    # TODO: Add at the grid coordinates the placed AprilTag's id
-]
+# Grid coordinates with associated AprilTag IDs
+grid_coords_tag_id = {
+    1: [3, 0],
+    2: [5, 0],
+    3: [3, 2],
+    4: [5, 2],
+    5: [7, 2]
+}
 
 yaml_path = "/code/catkin_ws/src/user_code/project/map/map.yaml"
+# Write map and tag information to the YAML file
 with open(yaml_path, "w") as file:
-    yaml.dump({"map": map_array}, file)
+    yaml.dump({"map": map_array, "tags": grid_coords_tag_id}, file, default_flow_style=False)
 
-# TODO: Write the grid_coords_tag_id to a YAML file
+print(f"Map and tag information written to {yaml_path}")
