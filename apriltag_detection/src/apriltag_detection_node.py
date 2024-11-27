@@ -3,18 +3,17 @@
 # This node publishes the detected AprilTag id
 # , the grid coordinates of the detected AprilTag
 # and the pose of the detected AprilTag in the camera frame
-
 import rospy
-import os
 import numpy as np
 from dt_apriltags import Detector
-import datetime
 import yaml
 import cv2
+import os
 from scipy.spatial.transform import Rotation as R
 from sensor_msgs.msg import CompressedImage
 from geometry_msgs.msg import PoseStamped
 from apriltag_detection.msg import ApriltagMsg
+import duckietown_utils as dtu
 
 def rotation_mat_to_quat(rot_mat: np.ndarray) -> dict:
     if rot_mat.shape != (3, 3):
@@ -33,9 +32,9 @@ def rotation_mat_to_quat(rot_mat: np.ndarray) -> dict:
 
 class AprilTagDetectionNode:
     def __init__(self) -> None:
-        self.robot_name = rospy.get_param("/robot_name")
+        self.robot_name = os.getenv('VEHICLE_NAME', None)
         if self.robot_name is None:
-            raise ValueError("/robot_name is not set, run project_bringup.sh first.")
+            raise ValueError("$VEHICLE_NAME is not set, export it first.")
         rospy.loginfo("Robot name: %s", self.robot_name)
 
         # keep everything in meter [m]
@@ -107,6 +106,14 @@ class AprilTagDetectionNode:
     
     def __store_latest_image_cb(self, image_msg: CompressedImage) -> None:
         self.last_image = image_msg
+
+        # For checking size of the img
+        # np_arr = np.frombuffer(image_msg.data, np.uint8)  # Convert compressed data to numpy array
+        # image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)  # Decode the image
+
+        # # Get dimensions
+        # height, width, _ = image.shape  # Height (v), Width (u), Channels
+        # rospy.loginfo(f"Image dimensions: Width (u) = {width}, Height (v) = {height}")
 
     def _process_latest_image(self, event) -> None:
         if self.last_image is None:
