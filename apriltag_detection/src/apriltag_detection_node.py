@@ -13,7 +13,7 @@ from scipy.spatial.transform import Rotation as R
 from sensor_msgs.msg import CompressedImage
 from geometry_msgs.msg import PoseStamped
 from apriltag_detection.msg import ApriltagMsg
-import duckietown_utils as dtu
+from typing import Tuple, Dict
 
 def rotation_mat_to_quat(rot_mat: np.ndarray) -> dict:
     if rot_mat.shape != (3, 3):
@@ -31,16 +31,48 @@ def rotation_mat_to_quat(rot_mat: np.ndarray) -> dict:
 
 
 class AprilTagDetectionNode:
+    node_name: str
+    robot_name: str
+    render_overlay: bool
+    detection_rate: int
+    tag_size: float
+    map: np.ndarray
+    tags: Dict[int, list]
+    intrinsic_dict: dict
+    camera_matrix: np.ndarray
+    distortion_coefficients: np.ndarray
+    projection_matrix: np.ndarray
+
+    detector: Detector
+
+    timer: rospy.Timer
+    
+    image_sub: rospy.Subscriber
+    last_image: CompressedImage
+    
+    tag_pub: rospy.Publisher
+    overlay_pub: rospy.Publisher
+
     def __init__(self) -> None:
+        self.node_name = rospy.get_name()
+        rospy.loginfo(f"[{self.node_name}] Initializing {self.node_name} node...")
+
         self.robot_name = os.getenv('VEHICLE_NAME', None)
         if self.robot_name is None:
             raise ValueError("$VEHICLE_NAME is not set, export it first.")
-        rospy.loginfo("Robot name: %s", self.robot_name)
+        rospy.loginfo(f"[{self.node_name}] Robot name: {self.robot_name}")
+
+        # Decide if we render the overlay image, default is False
+        self.render_overlay = rospy.get_param("~render_overlay", False)
+        rospy.loginfo(f"[{self.node_name}] Render overlay: {self.render_overlay}")
+        
+        self.detection_rate = 5 # Hz
+        rospy.loginfo(f"[{self.node_name}] Detection rate: {self.detection_rate} Hz")
 
         # keep everything in meter [m]
         self.tag_size = rospy.get_param("~tag_size")
         if self.tag_size is None:
-            raise ValueError("~tag_size is not set")
+            raise ValueError(f"[{self.node_name}] ~tag_size is not set")
         self.tag_size = float(self.tag_size)
 
         self.map, self.tags = self._read_map() # np.ndarray and dict{tag_id, [coord_x, coord_y]}
@@ -59,17 +91,19 @@ class AprilTagDetectionNode:
                                     debug=0)
         
         self.last_image = None
-        self.image_sub = rospy.Subscriber(f"/{self.robot_name}/camera_node/image/compressed", CompressedImage, self.__store_latest_image_cb)
-        self.timer = rospy.Timer(rospy.Duration(1/5), self._process_latest_image)
+        # self.image_sub = rospy.Subscriber(f"/{self.robot_name}/camera_node/image/compressed", CompressedImage, self.__store_latest_image_cb)
+        self.image_sub = rospy.Subscriber(f"/{self.robot_name}/rectifier_node/image/compressed", CompressedImage, self.__store_latest_image_cb)
+        self.timer = rospy.Timer(rospy.Duration(1/self.detection_rate), self._process_latest_image)
         self.tag_pub = rospy.Publisher(f"/{self.robot_name}/apriltag_detection_node/tag_info", ApriltagMsg, queue_size=1)
         # Publish the overlay image, **don't change endfix /compressed**
-        self.overlay_pub = rospy.Publisher(f"/{self.robot_name}/apriltag_detection_node/overlay/compressed", CompressedImage, queue_size=1)
+        if self.render_overlay:
+            self.overlay_pub = rospy.Publisher(f"/{self.robot_name}/apriltag_detection_node/overlay/compressed", CompressedImage, queue_size=1)
 
-    def _read_map(self) -> np.ndarray:
+    def _read_map(self) -> Tuple[np.ndarray, Dict[int, list]]:
         yaml_path = rospy.get_param("~map_yaml_path")
         if yaml_path is None:
             raise ValueError("~map_yaml_path is not set")
-        rospy.loginfo("Map YAML path: %s", yaml_path)
+        rospy.loginfo(f"[{self.node_name}] Map YAML path: %s", yaml_path)
         
         with open(yaml_path, "r") as file:
             data = yaml.load(file, Loader=yaml.FullLoader)
@@ -80,8 +114,8 @@ class AprilTagDetectionNode:
     def _read_intrinsic(self) -> dict:
         yaml_path = rospy.get_param("~camera_intrinsics_yaml_path")
         if yaml_path is None:
-            raise ValueError("~camera_intrinsics_yaml_path is not set")
-        rospy.loginfo("Intrinsic YAML path: %s", yaml_path)
+            raise ValueError(f"[{self.node_name}] ~camera_intrinsics_yaml_path is not set")
+        rospy.loginfo(f"[{self.node_name}] Intrinsic YAML path: %s", yaml_path)
         
         with open(yaml_path, "r") as file:
             data = yaml.safe_load(file)
@@ -135,16 +169,16 @@ class AprilTagDetectionNode:
         tags = self.detector.detect(gray, estimate_tag_pose=True, camera_params=[fx, fy, cx, cy], tag_size=self.tag_size)
         
         detected_ids = [tag.tag_id for tag in tags]
+        valid_ids = self.tags.keys()
         checked_ids = []
-        # rospy.loginfo("Detected tags: %s", detected_ids)
+        # rospy.loginfo(f"[{self.node_name}] Detected tags: %s", detected_ids)
 
         # Find the closest tag to the camera
         closest_tag = None
         min_distance = float('inf')
 
         for tag in tags:
-            if tag.tag_id in checked_ids:
-                # to avoid checking the same tag id multiple times
+            if tag.tag_id in checked_ids or tag.tag_id not in valid_ids:
                 continue
             checked_ids.append(tag.tag_id)
             # Calculate the Euclidean distance of the tag from the camera
@@ -173,6 +207,8 @@ class AprilTagDetectionNode:
             self.tag_pub.publish(tag_msg)
 
             # Overlay the detected tag on the image
+            if not self.render_overlay:
+                return
             overlay_image = undistorted_image.copy()
             for tag in tags:
                 # Ensure corners are in integer coordinates and draw lines between them
@@ -210,7 +246,18 @@ class AprilTagDetectionNode:
             tag_msg.tag_pose.pose.orientation.w = 1
             tag_msg.grid_coords = [0, 0]
             self.tag_pub.publish(tag_msg)
-            self.overlay_pub.publish(image_msg)
+
+            if not self.render_overlay:
+                return
+            # publish the undistorted image
+            compressed_image_msg = CompressedImage()
+            compressed_image_msg.header = image_msg.header
+            compressed_image_msg.header.stamp = rospy.Time.now()
+            compressed_image_msg.format = "jpeg"
+            _, jpeg_image = cv2.imencode('.jpeg', undistorted_image)
+            compressed_image_msg.data = jpeg_image.tobytes()
+            self.overlay_pub.publish(compressed_image_msg)
+                
 
 
 if __name__ == "__main__":

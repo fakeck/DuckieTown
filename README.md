@@ -1,6 +1,6 @@
 # DuckieTown
 This repo is set for DuckieTown project QuackCruiser at ETH 2024Fall.
-## How to set up the repo
+## :gear: How to set up the repo
 In ssh out of container:  
 `$ cd ~/vnc-docker/user_code_mount_dir`  
 `$ git clone git@github.com:li-yunwen/DuckieTown.git project`  
@@ -16,9 +16,9 @@ In container:
 `$ cd src/user_code/project`  
 `$ pip install -r pip_requirements.txt`  
 
-## How to develop
+## :hammer_and_wrench: How to develop
 **Always list the pip installed environment in pip_requirements.txt.**  
-Keep everthing in SI unit.  
+:balance_scale: Keep everthing in SI unit, e.g., m, rad, sec.  
 
 Always read robot_name from env instead of hardcode it in the node script:
 ```
@@ -27,41 +27,46 @@ if self.robot_name is None:
     raise ValueError("$VEHICLE_NAME is not set, export it first.")
 rospy.loginfo("Robot name: %s", self.robot_name)
 ```
+Always read robot_name from env instead of hardcode it in the launch script:
+```
+<arg name="camera_intrinsics_yaml_path" default="/data/config/calibrations/camera_intrinsic/$(env VEHICLE_NAME).yaml" />
+```
 
-Find TODO in existing files or create new ROS packages.  
+#### TODO list:
+:black_square_button: Tune `lane_following_controller/config/default.yaml` for lane following:  
+1. Bring up dt-core as instructed in Lane Following below  
+2. In RealVNC, use `$ rqt_image_view` to subscribe to different images and check the quality of lane detection
+3. Modify parameters in `lane_following_controller/config/default.yaml` accordingly
+4. Shut down dt-core and re-bringup to validate your changes
 
-## How to run  
+## :rocket: How to run  
 Don't forget to source `devel/setup.bash` in RealVNC terminals if you cannot locate a package.
 
 Don't forget to `chmod +x` for shell scripts and python files.  
 
-#### AprilTag Detection  
+#### :eyes: AprilTag Detection (apriltag_detection)
 1. Perform camera calibration according to [the tutorial](https://github.com/ETHZ-DT-Class/camera-calibration-tools?tab=readme-ov-file).
 
-2. In `/code/catkin_ws/src/user_code/project/apriltag_detection/launch/apriltag_detection.launch`, change `ivy.yaml` to your robot's intrinsic parameter file.
-
-3. launch:  
+2. launch:  
 `roslaunch apriltag_detection apriltag_detection.launch`
 
-4. You should then be able to echo the topic `/[ROBOT_NAME]/apriltag_detection_node/tag_info`. You can visualize `/[ROBOT_NAME]/apriltag_detection_node/tag_info/overlay/compressed` using `$ rqt_image_view` in RealVNC:  
+3. You should then be able to echo the topic `/[ROBOT_NAME]/apriltag_detection_node/tag_info`. You can visualize `/[ROBOT_NAME]/apriltag_detection_node/tag_info/overlay/compressed` using `$ rqt_image_view` in RealVNC:  
 ![detecetd tags](README_asset/detected_tags.png)
 
-#### Lane Following
-To start:  
-1. In ssh out of container:  
-`$ cd /home/duckie/vnc-docker/user_code_mount_dir/project/lane_following_config`  
+#### :motorway: Lane Following (lane_following_controller)
+1. Perform wheel calibration according to [the tutorial](https://docs.duckietown.com/ente/opmanual-duckiebot/operations/calibration_wheels/index.html).
+2. To start:  
+In ssh out of container, bring up dt-core:  
+`$ cd /home/duckie/vnc-docker/user_code_mount_dir/project/lane_following_controller/bash_scripts`  
 `$ ./bringup_dt_core.sh`  
-
-2. In container:  
-`$ cd /code/catkin_ws/src/user_code/project/lane_following_config`  
+In main-workspace container, signal start lane following:  
+`$ cd /code/catkin_ws/src/user_code/project/lane_following_controller/bash_scripts`  
 `$ ./start_lane_follwing.sh`
-
-To stop:  
-1. In container:  
-`$ cd /code/catkin_ws/src/user_code/project/lane_following_config`  
+3. To stop:  
+In main-workspace container, signal stop lane follwing:  
+`$ cd /code/catkin_ws/src/user_code/project/lane_following_controller/bash_scripts`  
 `$ ./stop_lane_follwing.sh`
-
-2. In ssh out of container:  
-`$ cd /home/duckie/vnc-docker/user_code_mount_dir/project/lane_following_config`  
+In ssh out of container, shut down dt-core:  
+`$ cd /home/duckie/vnc-docker/user_code_mount_dir/project/lane_following_controller/bash_scripts`  
 `$ ./shutdown_dt_core.sh`  
 

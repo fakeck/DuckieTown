@@ -1,0 +1,4 @@
+<launch>
+    <node name="lane_following_controller_node" pkg="lane_following_controller" type="lane_following_controller_node.py" output="screen">
+    </node>
+</launch>
