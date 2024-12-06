@@ -91,8 +91,7 @@ class AprilTagDetectionNode:
                                     debug=0)
         
         self.last_image = None
-        # self.image_sub = rospy.Subscriber(f"/{self.robot_name}/camera_node/image/compressed", CompressedImage, self.__store_latest_image_cb)
-        self.image_sub = rospy.Subscriber(f"/{self.robot_name}/rectifier_node/image/compressed", CompressedImage, self.__store_latest_image_cb)
+        self.image_sub = rospy.Subscriber(f"/{self.robot_name}/camera_node/image/compressed", CompressedImage, self.__store_latest_image_cb)
         self.timer = rospy.Timer(rospy.Duration(1/self.detection_rate), self._process_latest_image)
         self.tag_pub = rospy.Publisher(f"/{self.robot_name}/apriltag_detection_node/tag_info", ApriltagMsg, queue_size=1)
         # Publish the overlay image, **don't change endfix /compressed**

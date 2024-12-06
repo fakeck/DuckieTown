@@ -39,6 +39,12 @@ Always read robot_name from env instead of hardcode it in the launch script:
 3. Modify parameters in `lane_following_controller/config/default.yaml` accordingly
 4. Shut down dt-core and re-bringup to validate your changes
 
+:black_square_button: Test the start and stop of lane following node  
+:black_square_button: The node for turn left/right/Uturn  
+:black_square_button: The state machine node  
+:black_square_button: The obstacle detection node  
+:black_square_button: The obstacle avoidance node  
+
 ## :rocket: How to run  
 Don't forget to source `devel/setup.bash` in RealVNC terminals if you cannot locate a package.
 
@@ -69,4 +75,9 @@ In main-workspace container, signal stop lane follwing:
 In ssh out of container, shut down dt-core:  
 `$ cd /home/duckie/vnc-docker/user_code_mount_dir/project/lane_following_controller/bash_scripts`  
 `$ ./shutdown_dt_core.sh`  
+
+#### :pencil: Planner (planner)
+Dijkstra with direction of streets encoded. Images to be included. (TODO)
+
+#### :mag_right: Obstacle Detection
 

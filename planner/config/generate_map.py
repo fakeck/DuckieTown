@@ -25,7 +25,7 @@ grid_coords_tag_id = {
     5: [7, 2]
 }
 
-yaml_path = "/code/catkin_ws/src/user_code/project/map/map.yaml"
+yaml_path = "/code/catkin_ws/src/user_code/project/planner/config/map.yaml"
 # Write map and tag information to the YAML file
 with open(yaml_path, "w") as file:
     yaml.dump({"map": map_array, "tags": grid_coords_tag_id}, file, default_flow_style=False)

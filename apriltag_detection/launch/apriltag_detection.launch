@@ -1,5 +1,5 @@
 <launch>
-    <arg name="map_yaml_path" default="/code/catkin_ws/src/user_code/project/map/map.yaml" />
+    <arg name="map_yaml_path" default="$(find planner)/config/map.yaml" />
     <arg name="camera_intrinsics_yaml_path" default="/data/config/calibrations/camera_intrinsic/$(env VEHICLE_NAME).yaml" />
     <arg name="tag_size" default="0.12" /> <!-- 120mm -->
     <arg name="render_overlay" default="true" />

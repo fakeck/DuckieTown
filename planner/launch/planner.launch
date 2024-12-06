@@ -1,0 +1,7 @@
+<launch>
+    <arg name="map_yaml_path" default="$(find planner)/config/map.yaml" />
+
+    <node name="planner_node" pkg="planner" type="planner_node.py" output="screen">
+        <param name="map_yaml_path" value="$(arg map_yaml_path)" />
+    </node>
+</launch>
