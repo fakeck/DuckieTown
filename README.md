@@ -10,11 +10,12 @@ To update the latest repo:
 `$ git pull` 
 
 In container:  
-`$ cd /code/catkin_ws`    
-`$ source devel/setup.bash`  
+`$ cd /code/catkin_ws`  
 `$ catkin build`  
+`$ source devel/setup.bash`  
 `$ cd src/user_code/project`  
 `$ pip install -r pip_requirements.txt`  
+
 
 ## :hammer_and_wrench: How to develop
 **Always list the pip installed environment in pip_requirements.txt.**  
@@ -80,4 +81,30 @@ In ssh out of container, shut down dt-core:
 Dijkstra with direction of streets encoded. Images to be included. (TODO)
 
 #### :mag_right: Obstacle Detection
-
+:black_square_button:TODO: COPYRIGHT of the repo
+Set up [darknet_ros](https://github.com/leggedrobotics/darknet_ros) on duckie:  
+1. In container,
+`$ nano ~/.bashrc`, add
+```
+export PATH=/usr/local/cuda-10.2/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+export CUDA_HOME=$CUDA_HOME:/usr/local/cuda-10.2
+```
+2. In container,
+```
+$ sudo apt install gcc-8 g++-8
+$ sudo ln -s /usr/bin/gcc-8 /usr/local/cuda-10.2/bin/gcc 
+$ sudo ln -s /usr/bin/g++-8 /usr/local/cuda-10.2/bin/g++
+$ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 80
+$ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 80
+$ cd /code/catkin_ws/src/user_code/project/darknet_ros/darknet
+$ make
+$ cd /code/catkin_ws
+$ catkin build
+$ catkin build darknet_ros -DCMAKE_BUILD_TYPE=Release
+$ source devel/setup.bash
+$ cd /code/catkin_ws/src/user_code/project/darknet_ros/darknet_ros/yolo_network_config/weights
+$ wget http://pjreddie.com/media/files/yolov3-tiny.weights
+```
+3. launch:  
+`roslaunch darknet_ros darknet_ros.launch`
