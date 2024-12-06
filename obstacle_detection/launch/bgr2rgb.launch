@@ -1,0 +1,4 @@
+<launch>
+    <node name="bgr2rgb_node" pkg="obstacle_detection" type="bgr2rgb_node.py" output="screen">
+    </node>
+</launch>
