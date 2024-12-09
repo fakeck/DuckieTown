@@ -68,11 +68,11 @@ In ssh out of container, bring up dt-core:
 `$ ./bringup_dt_core.sh`  
 In main-workspace container, signal start lane following:  
 `$ cd /code/catkin_ws/src/user_code/project/lane_following_controller/bash_scripts`  
-`$ ./start_lane_follwing.sh`
+`$ ./start_lane_following.sh`
 3. To stop:  
-In main-workspace container, signal stop lane follwing:  
+In main-workspace container, signal stop lane following:  
 `$ cd /code/catkin_ws/src/user_code/project/lane_following_controller/bash_scripts`  
-`$ ./stop_lane_follwing.sh`
+`$ ./stop_lane_following.sh`
 In ssh out of container, shut down dt-core:  
 `$ cd /home/duckie/vnc-docker/user_code_mount_dir/project/lane_following_controller/bash_scripts`  
 `$ ./shutdown_dt_core.sh`  
