@@ -1,0 +1,76 @@
+<launch>
+  <node pkg="your_package" type="fsm_node.py" name="fsm_node" output="screen">
+    <rosparam>
+      states:
+        PLANNING:
+          active_nodes: ['trajectory_planner']
+          transitions:
+            plan_complete: 'LANE_FOLLOWING'
+            reached_goal: 'STOP'
+
+        LANE_FOLLOWING:
+          active_nodes: ['lane_controller', 'line_detector']
+          transitions:
+            obstacle_detected: 'OBSTACLE_AVOIDANCE'
+            turn_needed: 'TURNING'
+            reached_goal: 'STOP'
+
+        OBSTACLE_AVOIDANCE:
+          active_nodes: ['obstacle_detector', 'avoidance_controller']
+          transitions:
+            obstacle_cleared: 'LANE_FOLLOWING'
+
+        TURNING:
+          active_nodes: ['turn_controller', 'apriltag_detector']
+          transitions:
+            turn_complete: 'LANE_FOLLOWING'
+
+        STOP:
+          active_nodes: ['position_controller']
+          transitions:
+            new_goal: 'PLANNING'
+
+      nodes:
+        trajectory_planner: '/planning/switch'
+        lane_controller: '/lane_following/switch'
+        line_detector: '/line_detector/switch'
+        obstacle_detector: '/obstacle_detector/switch'
+        avoidance_controller: '/avoidance/switch'
+        turn_controller: '/turning/switch'
+        apriltag_detector: '/apriltag/switch'
+        position_controller: '/position/switch'
+
+      events:
+        plan_complete:
+          topic: '/planning/complete'
+          msg_type: 'BoolStamped'
+          trigger: true
+        obstacle_detected:
+          topic: '/obstacle/detected'
+          msg_type: 'BoolStamped'
+          trigger: true
+        obstacle_cleared:
+          topic: '/obstacle/cleared'
+          msg_type: 'BoolStamped'
+          trigger: true
+        turn_needed:
+          topic: '/navigation/turn_required'
+          msg_type: 'BoolStamped'
+          trigger: true
+        turn_complete:
+          topic: '/turning/complete'
+          msg_type: 'BoolStamped'
+          trigger: true
+        reached_goal:
+          topic: '/navigation/goal_reached'
+          msg_type: 'BoolStamped'
+          trigger: true
+        new_goal:
+          topic: '/navigation/new_goal'
+          msg_type: 'BoolStamped'
+          trigger: true
+
+      initial_state: 'PLANNING'
+    </rosparam>
+  </node>
+</launch>
