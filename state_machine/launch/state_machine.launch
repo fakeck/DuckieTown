@@ -1,5 +1,5 @@
 <launch>
-  <node pkg="your_package" type="fsm_node.py" name="fsm_node" output="screen">
+  <node pkg="state_machine" type="state_machine_node.py" name="state_machie_node" output="screen">
     <rosparam>
       states:
         PLANNING:
