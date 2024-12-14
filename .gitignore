@@ -1,2 +1,7 @@
 personal_notes.txt
-/.vscode
+.vscode
+*.egg-info
+darknet_ros/darknet/obj/
+darknet_ros/darknet/libdarknet.a
+darknet_ros/darknet/libdarknet.so
+darknet_ros/darknet/darknet

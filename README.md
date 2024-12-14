@@ -93,8 +93,6 @@ export CUDA_HOME=$CUDA_HOME:/usr/local/cuda-10.2
 2. In container,
 ```
 $ sudo apt install gcc-8 g++-8
-$ sudo ln -s /usr/bin/gcc-8 /usr/local/cuda-10.2/bin/gcc 
-$ sudo ln -s /usr/bin/g++-8 /usr/local/cuda-10.2/bin/g++
 $ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 80
 $ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 80
 $ cd /code/catkin_ws/src/user_code/project/darknet_ros/darknet
@@ -106,5 +104,11 @@ $ source devel/setup.bash
 $ cd /code/catkin_ws/src/user_code/project/darknet_ros/darknet_ros/yolo_network_config/weights
 $ wget http://pjreddie.com/media/files/yolov3-tiny.weights
 ```
-3. launch:  
-`roslaunch darknet_ros darknet_ros.launch`
+3. Open `/code/catkin_ws/src/user_code/project/darknet_ros/darknet_ros/config/ros.yaml`:
+change `camera_reading: topic` according to your robot's name and your image input topic.  
+
+4. launch:  
+`$ roslaunch darknet_ros darknet_ros.launch` 
+This launch file also includes a launch of our BGR to RGB node.
+
+5. Do it with home wifi or mobile hotspot. The performance is way more better.

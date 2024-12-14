@@ -19,7 +19,7 @@ def rotation_mat_to_quat(rot_mat: np.ndarray) -> dict:
     if rot_mat.shape != (3, 3):
         raise ValueError("Rotation matrix must be 3x3.")
     
-    rotation = R.from_dcm(rot_mat)
+    rotation = R.from_matrix(rot_mat)
     quat = rotation.as_quat() # scalar last
     
     return {
@@ -38,6 +38,7 @@ class AprilTagDetectionNode:
     tag_size: float
     map: np.ndarray
     tags: Dict[int, list]
+    goal_tag_id: int
     intrinsic_dict: dict
     camera_matrix: np.ndarray
     distortion_coefficients: np.ndarray
@@ -73,7 +74,16 @@ class AprilTagDetectionNode:
         self.tag_size = rospy.get_param("~tag_size")
         if self.tag_size is None:
             raise ValueError(f"[{self.node_name}] ~tag_size is not set")
+        rospy.loginfo(f"[{self.node_name}] Tag size: %s", self.tag_size)
         self.tag_size = float(self.tag_size)
+
+        self.goal_tag_id = rospy.get_param(f"/{self.robot_name}/goal_tag_id", None)
+        if self.goal_tag_id is None:
+            rospy.logwarn(f"[{self.node_name}] /{self.robot_name}/goal_tag_id is not set")
+            self.goal_tag_id = -1
+        else:
+            rospy.loginfo(f"[{self.node_name}] Goal tag id: %s", self.goal_tag_id)
+            self.goal_tag_id = int(self.goal_tag_id)
 
         self.map, self.tags = self._read_map() # np.ndarray and dict{tag_id, [coord_x, coord_y]}
         self.intrinsic_dict = self._read_intrinsic()
@@ -168,7 +178,7 @@ class AprilTagDetectionNode:
         tags = self.detector.detect(gray, estimate_tag_pose=True, camera_params=[fx, fy, cx, cy], tag_size=self.tag_size)
         
         detected_ids = [tag.tag_id for tag in tags]
-        valid_ids = self.tags.keys()
+        valid_ids = list(self.tags.keys()) + [self.goal_tag_id]
         checked_ids = []
         # rospy.loginfo(f"[{self.node_name}] Detected tags: %s", detected_ids)
 
@@ -202,7 +212,10 @@ class AprilTagDetectionNode:
             tag_msg.tag_pose.pose.orientation.z = quat['z']
             tag_msg.tag_pose.pose.orientation.w = quat['w']
 
-            tag_msg.grid_coords = self.tags[closest_tag.tag_id]
+            if closest_tag.tag_id == self.goal_tag_id:
+                tag_msg.grid_coords = [-1, -1]
+            else:
+                tag_msg.grid_coords = self.tags[closest_tag.tag_id]
             self.tag_pub.publish(tag_msg)
 
             # Overlay the detected tag on the image
