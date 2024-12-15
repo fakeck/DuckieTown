@@ -5,9 +5,13 @@ import numpy as np
 import cv2
 from sensor_msgs.msg import CompressedImage
 import os
-from concurrent.futures import ThreadPoolExecutor
 
 class BGR2RGBNode:
+    conversion_rate: int
+
+    image_sub: rospy.Subscriber
+    last_image: CompressedImage
+
     def __init__(self):
         self.node_name = rospy.get_name()
         rospy.loginfo(f"[{self.node_name}] Initializing node...")
@@ -17,27 +21,29 @@ class BGR2RGBNode:
             raise ValueError("$VEHICLE_NAME is not set, export it first.")
         rospy.loginfo(f"[{self.node_name}] Robot name: {self.robot_name}")
 
-        # Subscriber and Publisher
+        self.conversion_rate = 5 # Hz
+
+        self.last_image = None
         self.image_sub = rospy.Subscriber(
             f"/{self.robot_name}/camera_node/image/compressed",
             CompressedImage,
-            self._image_callback,
-            queue_size=20
+            self._image_callback
         )
         self.image_pub = rospy.Publisher(
             f"/{self.robot_name}/bgr2rgb_node/image/compressed",
             CompressedImage,
-            queue_size=20
+            queue_size=1
         )
 
-        # Thread pool for processing
-        self.executor = ThreadPoolExecutor(max_workers=os.cpu_count())
+        self.timer = rospy.Timer(rospy.Duration(1/self.conversion_rate), self._process_latest_image)
 
     def _image_callback(self, image_msg: CompressedImage):
-        # Offload image processing to a thread
-        self.executor.submit(self.process_image, image_msg)
+        self.last_image = image_msg
 
-    def process_image(self, image_msg: CompressedImage):
+    def _process_latest_image(self, event):
+        if self.last_image is None:
+            return # No image to process yet
+        image_msg = self.last_image
         try:
             # Decode the compressed image
             np_arr = np.frombuffer(image_msg.data, np.uint8)
