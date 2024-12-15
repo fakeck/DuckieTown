@@ -34,8 +34,8 @@
 
 
 #lane_control/lane_controller_node
-v_bar: 0.3
-k_d: -6.0
+v_bar: 0.15  #below 0.15 duckie is to weak to get over panel borders
+k_d: -6.0  
 k_theta: -5
 k_Id: -0.3
 k_Iphi: 0.0
@@ -56,8 +56,8 @@ integral_bounds:
     bot: -1.2
 
 # TODO: lane filter should publish this information
-d_resolution: 0.011
-phi_resolution: 0.051
+d_resolution: 0.011 #d_resolution: 0.02  #
+phi_resolution: 0.051 #phi_resolution: 0.1  #
 
 stop_line_slowdown:
   start: 0.6

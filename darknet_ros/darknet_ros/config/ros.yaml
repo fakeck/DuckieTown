@@ -1,7 +1,7 @@
 subscribers:
 
   camera_reading:
-    topic: /ivy/bgr2rgb_node/image
+    topic: /kayla/bgr2rgb_node/image
     queue_size: 1
 
 actions:

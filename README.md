@@ -42,7 +42,7 @@ Always read robot_name from env instead of hardcode it in the launch script:
 
 :black_square_button: Test the start and stop of lane following node  
 :black_square_button: The node for turn left/right/Uturn  
-:black_square_button: The state machine node  
+:black_square_button: The machine node  
 :black_square_button: The obstacle detection node  
 :black_square_button: The obstacle avoidance node  
 
@@ -82,7 +82,10 @@ Dijkstra with direction of streets encoded. Images to be included. (TODO)
 
 #### :mag_right: Obstacle Detection
 :black_square_button:TODO: COPYRIGHT of the repo
-Set up [darknet_ros](https://github.com/leggedrobotics/darknet_ros) on duckie:  
+Set up [darknet_ros](https://github.com/leggedrobotics/darknet_ros) on duckie:
+`cd /vnc-docker/user_code_mount_dir/project`
+`git clone git@github.com:leggedrobotics/darknet_ros.git darnet_ros
+
 1. In container,
 `$ nano ~/.bashrc`, add
 ```
