@@ -14,19 +14,19 @@ class TurnDirection(Enum):
 
 # Parameters left
 VELOCITY_LEFT = 0.3 # Linear velocity in m/s
-RADIUS_LEFT = 0.45
+RADIUS_LEFT = 0.18
 TURN_ANGLE_LEFT = 90 # The angle to turn in degrees )
-TURN_TIME_LEFT = 3.5
+TURN_TIME_LEFT = 2
 # Parameters right
 VELOCITY_RIGHT = 0.3 # Linear velocity in m/s
-RADIUS_RIGHT = 0.45
-TURN_ANGLE_RIGHT = -90 # The angle to turn in degrees
-TURN_TIME_RIGHT = 3.5
+RADIUS_RIGHT = -0.1
+TURN_ANGLE_RIGHT = 90 # The angle to turn in degrees
+TURN_TIME_RIGHT = 1.2
 # Parameters U
 VELOCITY_U = 0.3 # Linear velocity in m/s
-RADIUS_U = 0.45
+RADIUS_U = 0.07
 TURN_ANGLE_U = 180 # The angle to turn in degrees
-TURN_TIME_U = 7.0
+TURN_TIME_U = 1.7
 
 
 class TurnServer():

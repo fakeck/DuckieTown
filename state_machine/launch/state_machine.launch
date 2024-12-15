@@ -3,6 +3,8 @@
     <include file="$(find planner)/launch/planner.launch" />
     <include file="$(find lane_following_controller)/launch/lane_following_controller.launch" />
     <include file="$(find turning)/launch/turning.launch" />
+    <include file="$(find obstacle_detection)/launch/obstacle_detection.launch" />
+
 
     <node name="state_machine_node" pkg="state_machine" type="state_machine_node.py" output="screen">
         <param name="start_grid_coords_dir" value="[0, 0, 'WS']" />

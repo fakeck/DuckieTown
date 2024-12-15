@@ -20,6 +20,7 @@ class State(Enum):
     TURN_RIGHT = 4
     TURN_U = 5
     STOP = 6
+    OBSTACLE_AVOIDANCE = 7
 
 TAG_STOP_DIST = 0.3
 
@@ -35,6 +36,7 @@ class StateMachineNode:
     closest_tag_id: int
     closest_tag_dist: float
     goal_tag_id: int
+    obstacle_detected: bool
 
     state_pub: rospy.Publisher
     apriltag_sub: rospy.Subscriber
@@ -55,6 +57,7 @@ class StateMachineNode:
             raise ValueError(f"/{self.robot_name}/goal_tag_id is not set.")
         rospy.loginfo(f"[{self.node_name}] Goal tag id: %s", self.goal_tag_id)
         self.goal_tag_id = int(self.goal_tag_id)
+        self.obstacle_detected = False
 
         self.state = State.WAIT_FOR_PLAN
 
@@ -64,6 +67,8 @@ class StateMachineNode:
         self.state_pub = rospy.Publisher(f"/{self.robot_name}/state_machine_node/state", Int32, queue_size=1)
 
         self.apriltag_sub = rospy.Subscriber(f"/{self.robot_name}/apriltag_detection_node/tag_info", ApriltagMsg, self._apriltag_cb, queue_size=1)
+
+        self.obstacle_detection_sub = rospy.Subscriber(f"/{self.robot_name}/obstacle_detection_node/obstacle_detected", BoolStamped, self._obstacle_detection_cb, queue_size=1)
 
 
         # wait for all other services and messages to be ready [plan_service, turn_service, apriltag_detection, lane_following_controller, TODO: obstacle_detection]
@@ -75,7 +80,8 @@ class StateMachineNode:
         rospy.wait_for_message(f"/{self.robot_name}/apriltag_detection_node/tag_info", ApriltagMsg)
         rospy.loginfo(f"[{self.node_name}] Waiting for lane_following controller signal...")
         rospy.wait_for_message(f"/{self.robot_name}/lane_following_controller_node/state", BoolStamped)
-        # TODO
+        rospy.loginfo(f"[{self.node_name}] Waiting for obstacle_detection signal...")
+        rospy.wait_for_message(f"/{self.robot_name}/obstacle_detection_node/obstacle_detected", BoolStamped)
         rospy.loginfo(f"[{self.node_name}] All services and messages are ready.")
 
         self._begin_state_machine()
@@ -88,6 +94,11 @@ class StateMachineNode:
         else:
             self.closest_tag_id = msg.tag_id
             self.closest_tag_dist = msg.tag_pose.pose.position.z
+
+    
+    def _obstacle_detection_cb(self, msg: BoolStamped) -> None:
+        # True means obstacle detected
+        self.obstacle_detected = msg.data
 
     def _begin_state_machine(self) -> None:
         rospy.loginfo(f"[{self.node_name}] Starting state machine...")
@@ -145,6 +156,10 @@ class StateMachineNode:
                     continue
 
                 # TODO: check obstacles
+                if self.obstacle_detected is True:
+                    self.state = State.OBSTACLE_AVOIDANCE
+                    continue
+                
                 
                 # check if we are at a crossing
                 if self.closest_tag_dist and self.closest_tag_dist < TAG_STOP_DIST:
@@ -215,6 +230,19 @@ class StateMachineNode:
                 rospy.loginfo(f"[{self.node_name}] Goal reached! Use ctrl+c to stop the node.")
                 break
 
+            elif self.state == State.OBSTACLE_AVOIDANCE:
+                lane_follow_state = rospy.wait_for_message(f"/{self.robot_name}/lane_following_controller_node/state", BoolStamped)
+                while lane_follow_state.data:
+                    rospy.loginfo(f"[{self.node_name}] Obstacle! Waiting for lane following to stop...")
+                    lane_follow_state = rospy.wait_for_message(f"/{self.robot_name}/lane_following_controller_node/state", BoolStamped)
+                turn_service = rospy.ServiceProxy(f"/{self.robot_name}/turn_service", TurnService)
+                request = TurnServiceRequest()
+                request.direction = TurnDirection.STOP.value
+                rospy.loginfo(f"[{self.node_name}] Requesting stop from turn service...")
+                response = turn_service(request)
+                while self.obstacle_detected:
+                    rospy.sleep(0.1)
+                self.state = State.LANE_FOLLOW
             else:
                 raise ValueError(f"[{self.node_name}] Invalid state: {self.state}")
     

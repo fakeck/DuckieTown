@@ -34,9 +34,9 @@
 
 
 #lane_control/lane_controller_node
-v_bar: 0.15  #below 0.15 duckie is to weak to get over panel borders
-k_d: -6.0  
-k_theta: -5
+v_bar: 0.2  #below 0.15 duckie is to weak to get over panel borders
+k_d: -8.0  
+k_theta: -8.0
 k_Id: -0.3
 k_Iphi: 0.0
 #Broken up the 'theta_thres' for more finer tuning 
