@@ -7,8 +7,8 @@
 
 
     <node name="state_machine_node" pkg="state_machine" type="state_machine_node.py" output="screen">
-        <param name="start_grid_coords_dir" value="[0, 0, 'WS']" />
-        <param name="goal_grid_coords_dir" value="[4, 2, 'S']" />
+        <param name="start_grid_coords_dir" value="[6, 2, 'N']" />
+        <param name="goal_grid_coords_dir" value="[4, 4, 'SE']" />
     </node>
 
     <param name="/$(env VEHICLE_NAME)/goal_tag_id" value="10" />

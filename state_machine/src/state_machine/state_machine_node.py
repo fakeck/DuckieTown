@@ -139,7 +139,7 @@ class StateMachineNode:
                         elif self.plan[self.closest_tag_id] == Command.UTURN:
                             self.state = State.TURN_U
                         else:
-                            raise ValueError(f"[{self.node_name}] Invalid command at crossing {self.closest_tag_id}: {self.plan[self.closest_tag_id]}")
+                            rospy.logwarn(f"[{self.node_name}] Invalid command at crossing {self.closest_tag_id}: {self.plan[self.closest_tag_id]}")
                         self.crossings_already_passed.append(self.closest_tag_id)
                     else:
                         self.state = State.STOP
@@ -175,7 +175,7 @@ class StateMachineNode:
                     elif self.plan[self.closest_tag_id] == Command.UTURN:
                         self.state = State.TURN_U
                     else:
-                        raise ValueError(f"[{self.node_name}] Invalid command at crossing {self.closest_tag_id}: {self.plan[self.closest_tag_id]}")
+                        rospy.logwarn(f"[{self.node_name}] Invalid command at crossing {self.closest_tag_id}: {self.plan[self.closest_tag_id]}")
                     self.crossings_already_passed.append(self.closest_tag_id)
                 
             elif self.state == State.TURN_LEFT:
@@ -215,7 +215,7 @@ class StateMachineNode:
                 # rospy.loginfo(f"[{self.node_name}] State: TURN_U")
                 turn_service = rospy.ServiceProxy(f"/{self.robot_name}/turn_service", TurnService)
                 request = TurnServiceRequest()
-                request.direction = TurnDirection.UTURN.value
+                request.direction = TurnDirection.U.value
                 rospy.loginfo(f"[{self.node_name}] Requesting U-turn from turn service...")
                 response = turn_service(request)
                 self.state = State.LANE_FOLLOW

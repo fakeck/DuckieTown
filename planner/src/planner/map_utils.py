@@ -440,9 +440,9 @@ class MapGraph:
 
 if __name__ == "__main__":
     map_graph = MapGraph("/code/catkin_ws/src/user_code/project/planner/config/map.yaml")
-    start = (0, 0, StreetDirection.WS)
+    start = (6, 2, StreetDirection.N)
 
-    for end in [(7, 3, StreetDirection.W), (2, 2, StreetDirection.N), (7, 5, StreetDirection.SW)]:
+    for end in [(4, 4, StreetDirection.SE)]:
         path = map_graph.shortest_path(start, end)
-        # map_graph.visualize_path(path, "/code/catkin_ws/src/user_code/project/planner/config/map_graph.png")
+        map_graph.visualize_path(path, "/code/catkin_ws/src/user_code/project/planner/config/map_graph_62N_44SE.png")
         print(map_graph.reduce_to_crossing_cmd(path))

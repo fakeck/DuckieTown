@@ -5,3 +5,7 @@ darknet_ros/darknet/obj/
 darknet_ros/darknet/libdarknet.a
 darknet_ros/darknet/libdarknet.so
 darknet_ros/darknet/darknet
+lane_following_controller/config/default_control.yaml
+lane_following_controller/config/default.yaml
+darknet_ros/darknet_ros/config/ros.yaml
+turning/src/turning/turn_service.py
