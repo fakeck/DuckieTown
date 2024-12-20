@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+# Map: stores a map from a YAML file
+# MapGraph: encodes a graph representation of the map and provides methods to find the shortest path.
 from enum import Enum
 from typing import Dict, List, Tuple
 from enum import Enum
@@ -22,11 +25,14 @@ class NodeType(Enum):
     CORNER = 3
 
 class StreetDirection(Enum):
+    # For street
     N = 1
     S = 2
     E = 3
     W = 4
-    X = 5 # For crossings
+    # For crossing
+    X = 5
+    # For corner
     NE = 6
     EN = 7
     NW = 8
@@ -37,8 +43,8 @@ class StreetDirection(Enum):
     WS = 13
 
 class Node:
-    r: int
-    c: int
+    r: int # row idx
+    c: int # col idx
     type: NodeType
     direction: StreetDirection
 
@@ -85,6 +91,7 @@ class Map:
         return map, tags
 
     def __get_corner_coords(self):
+        """ return a list of all corner coordinates in the map """
         coner_coords = []
         for r in range(len(self.map_2d)):
             for c in range(len(self.map_2d[0])):
@@ -105,7 +112,7 @@ class MapGraph:
     __coord_node_dict: Dict[Tuple[int, int, StreetDirection], Node] # (r, c, dir) -> node
     __node_neighbors_dict: Dict[Node, List[Node]] # node -> neighbors
 
-    def __init__(self, map_yaml_path):
+    def __init__(self, map_yaml_path) -> None:
         self.map = Map(map_yaml_path)
         self.__coord_node_dict = self.__init_node()
         self.__node_neighbors_dict = self.__init_neighbors()
@@ -153,6 +160,7 @@ class MapGraph:
         return __node_neighbors_dict
 
     def __get_neighbors(self, node: Node) -> List[Node]:
+        """ return all reachable neighbors of the node """
         neighbors = []
         type = node.type
         if type == NodeType.CROSSING:
@@ -198,6 +206,7 @@ class MapGraph:
         return neighbors
 
     def __get_neighbor(self, node: Node, direction: StreetDirection) -> Node:
+        """ return the neighbor node at the given direction if it's reachable, otherwise return None """
         neighbor = None
         r = node.r
         c = node.c
@@ -293,7 +302,7 @@ class MapGraph:
 
     def shortest_path(self, start: Tuple[int, int, StreetDirection], end: Tuple[int, int, StreetDirection]) -> List[Tuple[int, int, StreetDirection]]:
         """Find the shortest path using networkx's Dijkstra's algorithm."""
-        # you are not allowed to start or stop at a crossing
+        # You are not allowed to start or stop at a crossing
         assert start[2] != StreetDirection.X and end[2] != StreetDirection.X, "Start and end nodes cannot be crossings."
         G = self.nx_graph
         try:

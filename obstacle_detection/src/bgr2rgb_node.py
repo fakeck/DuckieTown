@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+# This node converts BGR images to RGB images to feed YOLO-ROS.
 import rospy
 import numpy as np
 import cv2

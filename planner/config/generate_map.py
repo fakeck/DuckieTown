@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import yaml
 
+# Static map: 2D occupancy grid
 # -> : y-axis
 # |
 # v : x-axis

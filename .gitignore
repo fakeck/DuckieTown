@@ -5,3 +5,5 @@ darknet_ros/darknet/obj/
 darknet_ros/darknet/libdarknet.a
 darknet_ros/darknet/libdarknet.so
 darknet_ros/darknet/darknet
+turning/src/turning/turn_service.py
+darknet_ros/darknet_ros/config/ros.yaml

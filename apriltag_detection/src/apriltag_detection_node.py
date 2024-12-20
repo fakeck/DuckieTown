@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-# This node publishes the detected AprilTag id
-# , the grid coordinates of the detected AprilTag
-# and the pose of the detected AprilTag in the camera frame
+# This node publishes the closest detected AprilTag id, 
+# the corresponding map grid coordinates,
+# and the tag pose in the camera frame
 import rospy
 import numpy as np
 from dt_apriltags import Detector
@@ -63,10 +63,11 @@ class AprilTagDetectionNode:
             raise ValueError("$VEHICLE_NAME is not set, export it first.")
         rospy.loginfo(f"[{self.node_name}] Robot name: {self.robot_name}")
 
-        # Decide if we render the overlay image, default is False
-        self.render_overlay = rospy.get_param("~render_overlay", False)
+        # Decide if we render the overlay image, default is True
+        self.render_overlay = rospy.get_param("~render_overlay", True)
         rospy.loginfo(f"[{self.node_name}] Render overlay: {self.render_overlay}")
         
+        # Lower detection rate to reduce latency
         self.detection_rate = 5 # Hz
         rospy.loginfo(f"[{self.node_name}] Detection rate: {self.detection_rate} Hz")
 
@@ -85,6 +86,7 @@ class AprilTagDetectionNode:
             rospy.loginfo(f"[{self.node_name}] Goal tag id: %s", self.goal_tag_id)
             self.goal_tag_id = int(self.goal_tag_id)
 
+        # Read map and intrinsics from yaml files
         self.map, self.tags = self._read_map() # np.ndarray and dict{tag_id, [coord_x, coord_y]}
         self.intrinsic_dict = self._read_intrinsic()
         self.camera_matrix = self.intrinsic_dict['camera_matrix']
@@ -102,6 +104,7 @@ class AprilTagDetectionNode:
         
         self.last_image = None
         self.image_sub = rospy.Subscriber(f"/{self.robot_name}/camera_node/image/compressed", CompressedImage, self.__store_latest_image_cb)
+        
         self.timer = rospy.Timer(rospy.Duration(1/self.detection_rate), self._process_latest_image)
         self.tag_pub = rospy.Publisher(f"/{self.robot_name}/apriltag_detection_node/tag_info", ApriltagMsg, queue_size=1)
         # Publish the overlay image, **don't change endfix /compressed**
@@ -150,14 +153,6 @@ class AprilTagDetectionNode:
     def __store_latest_image_cb(self, image_msg: CompressedImage) -> None:
         self.last_image = image_msg
 
-        # For checking size of the img
-        # np_arr = np.frombuffer(image_msg.data, np.uint8)  # Convert compressed data to numpy array
-        # image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)  # Decode the image
-
-        # # Get dimensions
-        # height, width, _ = image.shape  # Height (v), Width (u), Channels
-        # rospy.loginfo(f"Image dimensions: Width (u) = {width}, Height (v) = {height}")
-
     def _process_latest_image(self, event) -> None:
         if self.last_image is None:
             return # No image to process yet
@@ -188,15 +183,16 @@ class AprilTagDetectionNode:
 
         for tag in tags:
             if tag.tag_id in checked_ids or tag.tag_id not in valid_ids:
-                continue
+                continue # Skip this tag if already checked or not valid on the map
             checked_ids.append(tag.tag_id)
-            # Calculate the Euclidean distance of the tag from the camera
+            # Calculate the Euclidean distance of the tag from the camera origin
             distance = np.linalg.norm(tag.pose_t)
             if distance < min_distance:
                 min_distance = distance
                 closest_tag = tag
 
         if closest_tag is not None:
+            # Publish the detected tag info
             tag_msg = ApriltagMsg()
             tag_msg.tag_id = closest_tag.tag_id
             tag_msg.tag_pose = PoseStamped()
@@ -245,7 +241,7 @@ class AprilTagDetectionNode:
         else:
             # No tag detected
             tag_msg = ApriltagMsg()
-            tag_msg.tag_id = -1
+            tag_msg.tag_id = -1 # No tag detected
             tag_msg.tag_pose = PoseStamped()
             tag_msg.tag_pose.header.stamp = rospy.Time.now()
             tag_msg.tag_pose.header.frame_id = "camera_frame"
@@ -261,7 +257,7 @@ class AprilTagDetectionNode:
 
             if not self.render_overlay:
                 return
-            # publish the undistorted image
+            # Publish the undistorted image
             compressed_image_msg = CompressedImage()
             compressed_image_msg.header = image_msg.header
             compressed_image_msg.header.stamp = rospy.Time.now()

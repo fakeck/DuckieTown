@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
+
+# This service receives a start and goal grid with heading direction.
+# Dijkstra's algorithm is used to find the shortest path between the start and goal.
+# The path is reduced to a series of optimal command at each crossing.
+# e.g. [PLACEHOLDER, LEFT, RIGHT, FORWARD, LEFT, FORWARD, RIGHT, PLACEHOLDER]
 from map_utils import MapGraph, Command, StreetDirection
 import rospy
 import numpy as np
-import yaml
 from typing import Tuple, Dict, List
 import os
 from planner.srv import PlannerService, PlannerServiceResponse

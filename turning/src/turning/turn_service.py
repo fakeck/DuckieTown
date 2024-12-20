@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# This node provides the ROS service to turn the Duckiebot in different directions.
+# rosrun turning turn_service.py
+# rosservice call /<robot_name>/turn_service "direction: 1"  # 1: LEFT, 2: RIGHT, 3: U, 4: STOP
 import os
 import rospy
 from duckietown_msgs.msg import Twist2DStamped, WheelEncoderStamped
@@ -19,7 +22,7 @@ TURN_ANGLE_LEFT = 90 # The angle to turn in degrees )
 TURN_TIME_LEFT = 2
 # Parameters right
 VELOCITY_RIGHT = 0.3 # Linear velocity in m/s
-RADIUS_RIGHT = -0.1
+RADIUS_RIGHT = -0.1 # Keep it negative to turn right
 TURN_ANGLE_RIGHT = 90 # The angle to turn in degrees
 TURN_TIME_RIGHT = 1.2
 # Parameters U

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# This node is the state machine of the robot.
 import rospy
 import numpy as np
 import ast
@@ -59,7 +61,7 @@ class StateMachineNode:
         self.goal_tag_id = int(self.goal_tag_id)
         self.obstacle_detected = False
 
-        self.state = State.WAIT_FOR_PLAN
+        self.state = State.WAIT_FOR_PLAN # initial state, wait for shortest plan
 
         self.plan = []
         self.crossings_already_passed = []
@@ -71,7 +73,8 @@ class StateMachineNode:
         self.obstacle_detection_sub = rospy.Subscriber(f"/{self.robot_name}/obstacle_detection_node/obstacle_detected", BoolStamped, self._obstacle_detection_cb, queue_size=1)
 
 
-        # wait for all other services and messages to be ready [plan_service, turn_service, apriltag_detection, lane_following_controller, TODO: obstacle_detection]
+        # wait for all other services and messages to be ready 
+        # [plan_service, turn_service, apriltag_detection, lane_following_controller, obstacle_detection]
         rospy.loginfo(f"[{self.node_name}] Waiting for planner service...")
         rospy.wait_for_service(f"/{self.robot_name}/planner_service")
         rospy.loginfo(f"[{self.node_name}] Waiting for turn service...")
@@ -97,7 +100,7 @@ class StateMachineNode:
 
     
     def _obstacle_detection_cb(self, msg: BoolStamped) -> None:
-        # True means obstacle detected
+        # True means obstacle detected, False otherwise
         self.obstacle_detected = msg.data
 
     def _begin_state_machine(self) -> None:
@@ -151,21 +154,20 @@ class StateMachineNode:
                 # rospy.loginfo(f"[{self.node_name}] State: LANE_FOLLOW")
                 if self.closest_tag_id and self.closest_tag_id == self.goal_tag_id and self.closest_tag_dist < TAG_STOP_DIST:
                     # print this time to check how much time we need to stop
-                    self.time = rospy.get_time()
+                    # self.time = rospy.get_time()
                     self.state = State.STOP
                     continue
 
-                # TODO: check obstacles
                 if self.obstacle_detected is True:
                     self.state = State.OBSTACLE_AVOIDANCE
                     continue
-                
                 
                 # check if we are at a crossing
                 if self.closest_tag_dist and self.closest_tag_dist < TAG_STOP_DIST:
                     if self.closest_tag_id in self.crossings_already_passed:
                         rospy.logwarn(f"[{self.node_name}] Already passed crossing {self.closest_tag_id} once, keep lane following.")
                         continue
+                    rospy.loginfo(f"[{self.node_name}] Detect tag id {self.closest_tag_id}")
                     if self.plan[self.closest_tag_id] == Command.FORWARD:
                         self.state = State.LANE_FOLLOW
                     elif self.plan[self.closest_tag_id] == Command.LEFT:
@@ -182,7 +184,7 @@ class StateMachineNode:
                 # make sure lane following is stopped
                 lane_follow_state = rospy.wait_for_message(f"/{self.robot_name}/lane_following_controller_node/state", BoolStamped)
                 while lane_follow_state.data:
-                    rospy.loginfo(f"[{self.node_name}] Waiting for lane following to stop...")
+                    # Waiting for lane following to stop
                     lane_follow_state = rospy.wait_for_message(f"/{self.robot_name}/lane_following_controller_node/state", BoolStamped)
                 # rospy.loginfo(f"[{self.node_name}] State: TURN_LEFT")
                 turn_service = rospy.ServiceProxy(f"/{self.robot_name}/turn_service", TurnService)
@@ -196,7 +198,7 @@ class StateMachineNode:
                 # make sure lane following is stopped
                 lane_follow_state = rospy.wait_for_message(f"/{self.robot_name}/lane_following_controller_node/state", BoolStamped)
                 while lane_follow_state.data:
-                    rospy.loginfo(f"[{self.node_name}] Waiting for lane following to stop...")
+                    # Waiting for lane following to stop
                     lane_follow_state = rospy.wait_for_message(f"/{self.robot_name}/lane_following_controller_node/state", BoolStamped)
                 # rospy.loginfo(f"[{self.node_name}] State: TURN_RIGHT")
                 turn_service = rospy.ServiceProxy(f"/{self.robot_name}/turn_service", TurnService)
@@ -210,7 +212,7 @@ class StateMachineNode:
                 # make sure lane following is stopped
                 lane_follow_state = rospy.wait_for_message(f"/{self.robot_name}/lane_following_controller_node/state", BoolStamped)
                 while lane_follow_state.data:
-                    rospy.loginfo(f"[{self.node_name}] Waiting for lane following to stop...")
+                    # Waiting for lane following to stop
                     lane_follow_state = rospy.wait_for_message(f"/{self.robot_name}/lane_following_controller_node/state", BoolStamped)
                 # rospy.loginfo(f"[{self.node_name}] State: TURN_U")
                 turn_service = rospy.ServiceProxy(f"/{self.robot_name}/turn_service", TurnService)
@@ -223,9 +225,9 @@ class StateMachineNode:
             elif self.state == State.STOP:
                 lane_follow_state = rospy.wait_for_message(f"/{self.robot_name}/lane_following_controller_node/state", BoolStamped)
                 while lane_follow_state.data:
-                    rospy.loginfo(f"[{self.node_name}] Waiting for lane following to stop...")
+                    # Waiting for lane following to stop
                     lane_follow_state = rospy.wait_for_message(f"/{self.robot_name}/lane_following_controller_node/state", BoolStamped)
-                rospy.loginfo(f"{rospy.get_time() - self.time} sec needed to stop")
+                # rospy.loginfo(f"{rospy.get_time() - self.time} sec needed to stop")
                 # let user know that we have reached the goal and use ctrl+c to stop the node
                 rospy.loginfo(f"[{self.node_name}] Goal reached! Use ctrl+c to stop the node.")
                 break
