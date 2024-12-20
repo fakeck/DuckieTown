@@ -142,9 +142,4 @@ For the grid coordinates and heading directions, please refer to the map in `pla
 <img src="README_asset/terminal.png" alt="terminal">
 
 ## :clapper: Expected demo operation
-<div style="text-align: center;">
-  <video width="640" height="360" controls>
-    <source src="README_asset/demo.mp4" type="video/mp4">
-    TODO
-  </video>
-</div>
+[![Demo Video](README_asset/demo_video.jpg)](https://youtu.be/y8ITnMAu1iU)
